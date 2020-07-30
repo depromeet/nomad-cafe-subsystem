@@ -31,11 +31,10 @@ class CollectBot:
             print("invalid api type.", self.bot["api_type"])
             exit(1)
 
-        self.sample_query()
-
-    def sample_query(self):
-        self.api.get('카페', 1)
+    def query(self, query_string, start):
+        self.api.get(query_string, start)
 
 
 if __name__ == '__main__':
-    CollectBot()
+    bot = CollectBot()
+    bot.query('카페', 1000)
