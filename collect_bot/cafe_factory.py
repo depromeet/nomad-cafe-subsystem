@@ -1,12 +1,8 @@
-import time
-
+import datetime
 import cafe
 
 
 class CafeFactory:
-    def __init__(self):
-        print()
-
     @staticmethod
     def new_cafe(data_type, data):
         return cafe.Cafe(
@@ -18,8 +14,6 @@ class CafeFactory:
             phone=data["TEL"],
             x=data["XCODE"],
             y=data["YCODE"],
-            create_dt=time.time(),
-            update_dt=time.time()
+            create_dt=datetime.datetime.utcnow(),
+            update_dt=datetime.datetime.utcnow()
         )
-
-

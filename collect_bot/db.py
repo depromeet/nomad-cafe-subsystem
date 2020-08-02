@@ -35,7 +35,8 @@ class Mongo:
         self.db = database.get_collection(self.collection)
 
     def upsert_one(self, data):
-        self.db.update_one({"_id": data.get_id()}, {'$set': data}, upsert=True)
+        _id = data.pop("_id")
+        self.db.update_one({"_id": _id}, {'$set': data}, upsert=True)
 
     def upsert_many(self, datas):
         ids = [data.pop("_id") for data in datas]
@@ -50,5 +51,5 @@ class Mongo:
 
 if __name__ == '__main__':
     db = Mongo()
-    db.upsert_one({"name": "sample"})
+    db.upsert_one({"_id": "sample", "name": "sample"})
     print(db.find())
