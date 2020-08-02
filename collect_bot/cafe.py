@@ -1,5 +1,20 @@
 class Cafe:
-    def __init__(self, name, parcel_addr, road_addr, start_hours, end_hours, phone, x, y, tags, create_dt, update_dt):
+    def __init__(self,
+                 data_id,
+                 data_type,
+                 name,
+                 x,
+                 y,
+                 create_dt,
+                 update_dt,
+                 parcel_addr=None,
+                 road_addr=None,
+                 phone=None,
+                 start_hours=None,
+                 end_hours=None,
+                 tags={}):
+        self._id = f"{data_type}-{data_id}"
+        self.data_id = data_id
         self.name = name
         self.parcel_addr = parcel_addr
         self.road_addr = road_addr
@@ -13,14 +28,21 @@ class Cafe:
         self.update_dt = update_dt
         self.valid()
 
+    def __repr__(self):
+        return f"name: {self.name}, addr: {self.road_addr}, addr old: {self.parcel_addr}, x: {self.x}, y: {self.y}"
+
+    def __str__(self):
+        return f"{self.name}, {self.road_addr}, {self.parcel_addr}, {self.x}, {self.y}"
+
+    def get_id(self):
+        return self._id
+
     def valid(self):
+        if self._id == "":
+            raise Exception("not exist id", self)
         if self.name == "":
-            raise Exception("not exist name")
-        if self.parcel_addr == "":
-            raise Exception("not exist parcel_addr")
-        if self.road_addr == "":
-            raise Exception("not exist road_addr")
+            raise Exception("not exist name", self)
         if self.x == "":
-            raise Exception("not exist x")
+            raise Exception("not exist x", self)
         if self.y == "":
-            raise Exception("not exist y")
+            raise Exception("not exist y", self)
