@@ -67,7 +67,7 @@ class CollectBot:
             except Exception as e:
                 print(e)
 
-        if len(datas) > 0:
+        if datas:
             self.db.upsert_many(datas)
 
 

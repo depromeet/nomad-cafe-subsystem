@@ -4,9 +4,6 @@ import requests
 
 
 class HTTPUtil:
-    def __init__(self):
-        print('')
-
     @staticmethod
     def get(url, params=None, **kwargs):
         resp = requests.get(url=url, params=params, **kwargs)
