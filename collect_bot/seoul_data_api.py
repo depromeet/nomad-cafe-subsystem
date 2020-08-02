@@ -23,4 +23,14 @@ class SeoulDataAPI:
         self.key = temp["key"]
 
     def get(self, start, end):
-        return http_util.HTTPUtil.get(f"{self.url}/{self.key}/json/coffeeShopInfo/{start}/{end}/")
+        resp = http_util.HTTPUtil.get(f"{self.url}/{self.key}/json/coffeeShopInfo/{start}/{end}/")
+        if "coffeeShopInfo" not in resp:
+            raise Exception("not exist key (coffeeShopInfo)")
+
+        if "RESULT" not in resp["coffeeShopInfo"]:
+            raise Exception("not exist key (RESULT)")
+
+        if resp["coffeeShopInfo"]["RESULT"]["CODE"] != "INFO-000":
+            raise Exception(resp["coffeeShopInfo"]["RESULT"]["MESSAGE"])
+
+        return resp["coffeeShopInfo"]

@@ -31,8 +31,23 @@ class CollectBot:
         else:
             raise Exception("invalid api type.", self.bot["api_type"])
 
-    def query(self, query_string, start):
-        self.api.get(query_string, start)
+    def query(self, start, end):
+        self.api.get(start, end)
+
+    def get_total_count(self):
+        resp = self.api.get(start=1, end=1)
+        if "list_total_count" not in resp:
+            raise Exception("not exist key(list_total_count)")
+
+        return resp["list_total_count"]
+
+    def collect(self):
+        total_count = self.get_total_count()
+        start = 1
+        row_count = 100
+        while total_count <= start:
+            self.api.get(start, start + row_count - 1)
+            start += row_count
 
 
 if __name__ == '__main__':
