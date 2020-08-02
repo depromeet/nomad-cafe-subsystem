@@ -56,7 +56,6 @@ class CollectBot:
             resp = self.api.get(start, start + row_count - 1)
             start += row_count
             self.save(resp)
-            break
 
     def save(self, resp):
         datas = []
