@@ -1,3 +1,6 @@
+import geo_util
+
+
 class Cafe:
     def __init__(self,
                  data_id,
@@ -21,28 +24,33 @@ class Cafe:
         self.start_hours = start_hours
         self.end_hours = end_hours
         self.phone = phone
-        self.x = x
-        self.y = y
         self.tags = tags
         self.create_dt = create_dt
         self.update_dt = update_dt
+
+        (lon, lat) = geo_util.GeoUtil.transform_location(x, y)
+        self.location = {
+            "type": "Point",
+            "coordinates": [
+                lon, lat
+            ]
+        }
+
         self.valid()
 
     def __repr__(self):
-        return f"name: {self.name}, addr: {self.road_addr}, addr old: {self.parcel_addr}, x: {self.x}, y: {self.y}"
+        return f"name: {self.name}, addr: {self.road_addr}, addr old: {self.parcel_addr}, " \
+            f"coordinates: {self.location['coordinates']}"
 
     def __str__(self):
-        return f"{self.name}, {self.road_addr}, {self.parcel_addr}, {self.x}, {self.y}"
-
-    def get_id(self):
-        return self._id
+        return f"{self.name}, {self.road_addr}, {self.parcel_addr}, {self.location['coordinates']}"
 
     def valid(self):
         if self._id == "":
             raise Exception("not exist id", self)
         if self.name == "":
             raise Exception("not exist name", self)
-        if self.x == "":
-            raise Exception("not exist x", self)
-        if self.y == "":
-            raise Exception("not exist y", self)
+        if self.location is None:
+            raise Exception("not exist location", self)
+
+
