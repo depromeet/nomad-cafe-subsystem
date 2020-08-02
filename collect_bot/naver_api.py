@@ -31,15 +31,15 @@ class NaverAPI:
         self.client_id = temp["client_id"]
         self.client_secret = temp["client_secret"]
 
-    def get(self, query, start):
+    def get(self, start, end):
         params = {
-            'query': query.encode("utf-8"),
-            'display': 5,  # max=5
+            'query': "카페".encode("utf-8"),
+            'display': end - start,  # max=5
             'start': start,  # 검색 시작 포인트
             'sort': 'random'  # random 일 경우 유사도순
         }
 
-        http_util.HTTPUtil.get(self.url, params=params, headers={
+        return http_util.HTTPUtil.get(self.url, params=params, headers={
             'X-Naver-Client-Id': self.client_id,
             'X-Naver-Client-Secret': self.client_secret,
         })

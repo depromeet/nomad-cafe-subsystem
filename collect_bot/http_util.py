@@ -8,8 +8,8 @@ class HTTPUtil:
         print('')
 
     @staticmethod
-    def get(url, params, headers):
-        resp = requests.get(url=url, params=params, headers=headers)
+    def get(url, params=None, **kwargs):
+        resp = requests.get(url=url, params=params, **kwargs)
         resp_json = json.loads(resp.text)
         print(json.dumps(resp_json, indent=4, sort_keys=True, ensure_ascii=False))
         return resp_json

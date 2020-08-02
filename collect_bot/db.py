@@ -16,33 +16,10 @@ class Mongo:
         for (k, v) in config.items("mongo"):
             temp[k] = v
 
-        if "scheme" not in temp:
-            print("invalid config (not exit scheme)")
-            exit(1)
-
-        if "host" not in temp:
-            print("invalid config (not exit host)")
-            exit(1)
-
-        if "port" not in temp:
-            print("invalid config (not exit port)")
-            exit(1)
-
-        if "dbname" not in temp:
-            print("invalid config (not exit dbname)")
-            exit(1)
-
-        if "collection" not in temp:
-            print("invalid config (not exit collection)")
-            exit(1)
-
-        if "username" not in temp:
-            print("invalid config (not exit username)")
-            exit(1)
-
-        if "password" not in temp:
-            print("invalid config (not exit password)")
-            exit(1)
+        config_key_groups = ['scheme', 'host', 'port', 'dbname', 'collection', 'username', 'password']
+        for key in config_key_groups:
+            if key not in self.bot:
+                raise Exception(f"invalid config (not exit {key}")
 
         self.scheme = temp["scheme"]
         self.host = temp["host"]

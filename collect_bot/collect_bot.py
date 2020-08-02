@@ -1,5 +1,6 @@
 import configparser
 import naver_api
+import seoul_data_api
 
 
 class CollectBot:
@@ -13,23 +14,22 @@ class CollectBot:
 
         self.bot = {}
         if "bot" not in config:
-            print("invalid config (not exit bot setting)")
-            exit(1)
+            raise Exception("invalid config (not exit bot setting)")
 
         for (k, v) in config.items("bot"):
             self.bot[k] = v
 
-        if "api_type" not in self.bot:
-            print("invalid config (not exit api setting)")
-            exit(1)
+        config_key_groups = ['api_type', 'db_type']
+        for key in config_key_groups:
+            if key not in self.bot:
+                raise Exception(f"invalid config (not exit {key}")
 
         if self.bot["api_type"] == "naver":
             self.api = naver_api.NaverAPI()
         elif self.bot["api_type"] == "seoul_data":
-            self.api = {}
+            self.api = seoul_data_api.SeoulDataAPI()
         else:
-            print("invalid api type.", self.bot["api_type"])
-            exit(1)
+            raise Exception("invalid api type.", self.bot["api_type"])
 
     def query(self, query_string, start):
         self.api.get(query_string, start)
@@ -37,4 +37,4 @@ class CollectBot:
 
 if __name__ == '__main__':
     bot = CollectBot()
-    bot.query('카페', 1000)
+    bot.query(1, 5)
