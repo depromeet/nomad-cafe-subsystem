@@ -8,13 +8,10 @@ class Mongo:
         config = configparser.ConfigParser()
         config.read('collect_bot.ini')
 
-        temp = {}
         if "mongo" not in config:
             raise Exception("invalid config (not exit mongo db setting)")
 
-        for (k, v) in config.items("mongo"):
-            temp[k] = v
-
+        temp = dict(config.items("mongo"))
         config_key_groups = ['scheme', 'host', 'port', 'dbname', 'collection', 'username', 'password']
         for key in config_key_groups:
             if key not in temp:
@@ -44,7 +41,7 @@ class Mongo:
         self.db.bulk_write(operations)
 
     def find(self, filters=None):
-        if filters is None:
+        if not filters:
             filters = {}
         return self.db.find(filters)
 

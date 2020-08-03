@@ -32,11 +32,11 @@ class Cafe:
         self.valid()
 
     def valid(self):
-        if self._id == "":
+        if not self._id:
             raise Exception("not exist id", self)
-        if self.name == "":
+        if not self.name:
             raise Exception("not exist name", self)
-        if self.location is None:
+        if not self.location:
             raise Exception("not exist location", self)
 
 

@@ -4,7 +4,7 @@ import geo_converter
 class GeoUtil:
     @staticmethod
     def transform_location(x, y):
-        if x is "" or y is "":
+        if not x or not y:
             raise Exception("x, y code are empty")
 
         x = float(x)

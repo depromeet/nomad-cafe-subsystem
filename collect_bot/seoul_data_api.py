@@ -7,13 +7,10 @@ class SeoulDataAPI:
         config = configparser.ConfigParser()
         config.read('collect_bot.ini')
 
-        temp = {}
         if "seoul_data" not in config:
             raise Exception("invalid config (not exit seoul data setting)")
 
-        for (k, v) in config.items("seoul_data"):
-            temp[k] = v
-
+        temp = dict(config.items("seoul_data"))
         config_key_groups = ['url', 'key']
         for key in config_key_groups:
             if key not in temp:

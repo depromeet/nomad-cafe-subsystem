@@ -14,12 +14,9 @@ class CollectBot:
         config = configparser.ConfigParser()
         config.read('collect_bot.ini')
 
-        self.bot = {}
         if "bot" not in config:
             raise Exception("invalid config (not exit bot setting)")
-
-        for (k, v) in config.items("bot"):
-            self.bot[k] = v
+        self.bot = dict(config.items("bot"))
 
         config_key_groups = ['api_type', 'db_type']
         for key in config_key_groups:
