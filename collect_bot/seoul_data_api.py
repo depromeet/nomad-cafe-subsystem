@@ -7,13 +7,10 @@ class SeoulDataAPI:
         config = configparser.ConfigParser()
         config.read('collect_bot.ini')
 
-        temp = {}
         if "seoul_data" not in config:
             raise Exception("invalid config (not exit seoul data setting)")
 
-        for (k, v) in config.items("seoul_data"):
-            temp[k] = v
-
+        temp = dict(config.items("seoul_data"))
         config_key_groups = ['url', 'key']
         for key in config_key_groups:
             if key not in temp:
@@ -23,4 +20,14 @@ class SeoulDataAPI:
         self.key = temp["key"]
 
     def get(self, start, end):
-        return http_util.HTTPUtil.get(f"{self.url}/{self.key}/json/coffeeShopInfo/{start}/{end}/")
+        resp = http_util.HTTPUtil.get(f"{self.url}/{self.key}/json/coffeeShopInfo/{start}/{end}/")
+        if "coffeeShopInfo" not in resp:
+            raise Exception("not exist key (coffeeShopInfo)")
+
+        if "RESULT" not in resp["coffeeShopInfo"]:
+            raise Exception("not exist key (RESULT)")
+
+        if resp["coffeeShopInfo"]["RESULT"]["CODE"] != "INFO-000":
+            raise Exception(resp["coffeeShopInfo"]["RESULT"]["MESSAGE"])
+
+        return resp["coffeeShopInfo"]

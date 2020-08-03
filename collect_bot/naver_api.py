@@ -7,25 +7,18 @@ class NaverAPI:
         config = configparser.ConfigParser()
         config.read('collect_bot.ini')
 
-        temp = {}
         if "naver" not in config:
-            print("invalid config (not exit naver api setting)")
-            exit(1)
+            raise Exception("invalid config (not exit naver api setting)")
 
-        for (k, v) in config.items("naver"):
-            temp[k] = v
-
+        temp = dict(config.items("naver"))
         if "url" not in temp:
-            print("invalid config (not exit url)")
-            exit(1)
+            raise Exception("invalid config (not exit url)")
 
         if "client_id" not in temp:
-            print("invalid config (not exit client id)")
-            exit(1)
+            raise Exception("invalid config (not exit client id)")
 
         if "client_secret" not in temp:
-            print("invalid config (not exit client secret)")
-            exit(1)
+            raise Exception("invalid config (not exit client secret)")
 
         self.url = temp["url"]
         self.client_id = temp["client_id"]

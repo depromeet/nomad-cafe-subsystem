@@ -1,26 +1,44 @@
+from dataclasses import dataclass, field
+import datetime
+import geo_util
+
+
+@dataclass
 class Cafe:
-    def __init__(self, name, parcel_addr, road_addr, start_hours, end_hours, phone, x, y, tags, create_dt, update_dt):
-        self.name = name
-        self.parcel_addr = parcel_addr
-        self.road_addr = road_addr
-        self.start_hours = start_hours
-        self.end_hours = end_hours
-        self.phone = phone
-        self.x = x
-        self.y = y
-        self.tags = tags
-        self.create_dt = create_dt
-        self.update_dt = update_dt
+    data_id: str
+    data_type: str
+    name: str
+    x: str
+    y: str
+    _id: str = ""
+    parcel_addr: str = ""
+    road_addr: str = ""
+    phone: str = ""
+    tags: dict = field(default_factory=dict)
+    location: dict = field(default_factory=dict)
+    create_dt: datetime.date = datetime.datetime.utcnow()
+    update_dt: datetime.date = datetime.datetime.utcnow()
+
+    def __post_init__(self):
+        self._id = f"{self.data_type}-{self.data_id}"
+        (lon, lat) = geo_util.GeoUtil.transform_location(self.x, self.y)
+        self.location = {
+            "type": "Point",
+            "coordinates": [
+                lon, lat
+            ]
+        }
+
         self.valid()
 
     def valid(self):
-        if self.name == "":
-            raise Exception("not exist name")
-        if self.parcel_addr == "":
-            raise Exception("not exist parcel_addr")
-        if self.road_addr == "":
-            raise Exception("not exist road_addr")
-        if self.x == "":
-            raise Exception("not exist x")
-        if self.y == "":
-            raise Exception("not exist y")
+        if not self._id:
+            raise Exception("not exist id", self)
+        if not self.name:
+            raise Exception("not exist name", self)
+        if not self.location:
+            raise Exception("not exist location", self)
+
+
+if __name__ == "__main__":
+    print(Cafe(data_id="id-1234", data_type="sample", name="sample", x="196078.0075", y="442261.8928"))

@@ -24,6 +24,10 @@ dnspython 1.15버전에서는 mongodb 접속 시 아래와 같은 오류가 발�
 ```
 pymongo.errors.ConfigurationError: query() got an unexpected keyword argument 'lifetime'
 ```
+주변 지역 탐색 쿼리를 위해 아래 명령으로 인덱스를 활성화해야함
+```
+db.cafe.ensureIndex({location:"2dsphere"})
+```
 
 ### 로컬에서 데이터베이스 접속 (on Windows)
 1. mongo Shell Download
