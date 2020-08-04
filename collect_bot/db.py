@@ -45,6 +45,11 @@ class Mongo:
             filters = {}
         return self.db.find(filters)
 
+    def aggregate(self, filters=None):
+        if not filters:
+            filters = {}
+        return self.db.aggregate(filters)
+
 
 if __name__ == '__main__':
     db = Mongo()
