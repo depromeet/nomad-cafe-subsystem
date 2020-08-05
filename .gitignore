@@ -130,3 +130,9 @@ dmypy.json
 
 # Pycharm
 .idea
+
+# CDK
+cdk.out
+*.egg-info
+dist
+build

@@ -40,3 +40,17 @@ db.cafe.ensureIndex({location:"2dsphere"})
     ```
     - dbname : nomad-cafe
     - username : nomad-cafe
+    
+### AWS CDK로 프로비저닝
+1. cdk 경로로 이동
+    ```buildoutcfg
+    cd aws_cdk
+    ```
+2. setup
+    ```buildoutcfg
+    python3 setup.py install
+    ```
+3. cdk 실행
+    ```buildoutcfg
+    cdk deploy VpcCdkStack Ec2CdkStack
+    ```
