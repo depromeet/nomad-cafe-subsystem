@@ -17,12 +17,13 @@ class SgCdkStack(core.Stack):
             security_group_name="web_cdk"
         )
 
+        my_ip = f"{requests.get('https://api.ipify.org').text}/32"
         sg.add_ingress_rule(
-            peer=ec2.Peer.ipv4(f"{requests.get('https://api.ipify.org').text}/32"),
+            peer=ec2.Peer.ipv4(my_ip),
             connection=ec2.Port.tcp(22)
         )
         sg.add_ingress_rule(
-            peer=ec2.Peer.ipv4(f"{requests.get('https://api.ipify.org').text}/32"),
+            peer=ec2.Peer.ipv4(my_ip),
             connection=ec2.Port.tcp(80)
         )
         sg.add_ingress_rule(
