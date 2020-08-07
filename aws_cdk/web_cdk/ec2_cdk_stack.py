@@ -1,7 +1,6 @@
-import requests
-
 from aws_cdk import (
     aws_ec2 as ec2,
+    aws_elasticloadbalancingv2 as lb,
     aws_autoscaling as autoscaling,
     core
 )
@@ -28,16 +27,21 @@ class Ec2CdkStack(core.Stack):
             key_name="yongho1037",
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE),
             user_data=userdata,
+            security_group=props["sg"],
         )
 
-        sg = ec2.SecurityGroup(
-            self,
-            id="web_cdk",
-            vpc=props['vpc'],
-            security_group_name="web_cdk"
-        )
+        nlb = lb.NetworkLoadBalancer(self, id="nlb_cdk",
+                                     vpc=props['vpc'],
+                                     internet_facing=True,
+                                     cross_zone_enabled=True,
+                                     vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC))
+        listener = nlb.add_listener("web_listener", port=80, protocol=lb.Protocol.TCP)
+        listener.add_targets("web_target", port=80, targets=[asg])
 
-        sg.add_ingress_rule(
-            peer=ec2.Peer.ipv4(f"{requests.get('https://api.ipify.org').text}/32"),
-            connection=ec2.Port.tcp(22)
-        )
+        self.output_props = props.copy()
+        self.output_props['asg'] = asg
+
+    # property를 사용하면 변수 사용하듯이 메소드를 사용할 수 있음
+    @property
+    def outputs(self):
+        return self.output_props
