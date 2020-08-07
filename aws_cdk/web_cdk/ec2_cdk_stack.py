@@ -10,9 +10,9 @@ class Ec2CdkStack(core.Stack):
     def __init__(self, scope: core.Construct, id: str, props, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        userdata_file = open("./web_cdk/userdata.sh", "rb").read()
         userdata = ec2.UserData.for_linux()
-        userdata.add_commands(str(userdata_file, 'utf-8'))
+        with open("./web_cdk/userdata.sh", "rb") as f:
+            userdata.add_commands(str(f.read(), 'utf-8'))
 
         asg = autoscaling.AutoScalingGroup(
             self,
