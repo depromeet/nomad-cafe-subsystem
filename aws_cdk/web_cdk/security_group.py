@@ -38,7 +38,6 @@ class SgCdkStack(core.Stack):
         self.output_props = props.copy()
         self.output_props['sg'] = sg
 
-    # property를 사용하면 변수 사용하듯이 메소드를 사용할 수 있음
     @property
     def outputs(self):
         return self.output_props

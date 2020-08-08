@@ -12,6 +12,11 @@ class Ec2CdkStack(core.Stack):
         super().__init__(scope, id, **kwargs)
 
         self.output_props = props.copy()
+        self.create_role()
+        self.create_nlb(props)
+        self.create_asg(service_type)
+
+    def create_role(self):
         if "default_role" not in self.output_props:
             default_role = iam.Role(
                 self,
@@ -22,6 +27,7 @@ class Ec2CdkStack(core.Stack):
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))
             self.output_props["default_role"] = default_role
 
+    def create_nlb(self, props):
         if "nlb" not in self.output_props:
             nlb = lb.NetworkLoadBalancer(self, id="nlb_cdk",
                                          vpc=props['vpc'],
@@ -31,22 +37,31 @@ class Ec2CdkStack(core.Stack):
 
             self.output_props["nlb"] = nlb
 
+    def create_asg(self, service_type):
         if service_type == "web":
-            self.web()
+            self.create_asg_by_service(name=service_type,
+                                       userdata_path="./web_cdk/userdata_web.sh",
+                                       key_name="yongho1037",
+                                       port=80)
         elif service_type == "stress_test":
-            self.stress_test()
+            self.create_asg_by_service(name=service_type,
+                                       userdata_path="./web_cdk/userdata_stress_test.sh",
+                                       key_name="yongho1037",
+                                       port=8089)
+        else:
+            raise Exception("invalid service type. ", service_type)
 
-    def web(self):
+    def create_asg_by_service(self, name, userdata_path, key_name, port):
         role = self.output_props["default_role"]
         sg = self.output_props["sg"]
         nlb = self.output_props["nlb"]
         userdata = ec2.UserData.for_linux()
-        with open("./web_cdk/userdata_web.sh", "rb") as f:
+        with open(userdata_path, "rb") as f:
             userdata.add_commands(str(f.read(), 'utf-8'))
 
         asg = autoscaling.AutoScalingGroup(
             self,
-            "web",
+            name,
             vpc=self.output_props['vpc'],
             instance_type=ec2.InstanceType.of(
                 ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO
@@ -54,7 +69,7 @@ class Ec2CdkStack(core.Stack):
             machine_image=ec2.AmazonLinuxImage(
                 generation=ec2.AmazonLinuxGeneration.AMAZON_LINUX_2
             ),
-            key_name="yongho1037",
+            key_name=key_name,
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE),
             user_data=userdata,
             security_group=sg,
@@ -65,44 +80,8 @@ class Ec2CdkStack(core.Stack):
             role=role,
         )
 
-        nlb.add_listener("web", port=80, protocol=lb.Protocol.TCP) \
-            .add_targets("web", port=80, targets=[asg])
-
-        return asg
-
-    def stress_test(self):
-        role = self.output_props["default_role"]
-        sg = self.output_props["sg"]
-        nlb = self.output_props["nlb"]
-        userdata = ec2.UserData.for_linux()
-        with open("./web_cdk/userdata_stress_test.sh", "rb") as f:
-            userdata.add_commands(str(f.read(), 'utf-8'))
-
-        asg = autoscaling.AutoScalingGroup(
-            self,
-            "stress-test",
-            vpc=self.output_props['vpc'],
-            instance_type=ec2.InstanceType.of(
-                ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO
-            ),
-            machine_image=ec2.AmazonLinuxImage(
-                generation=ec2.AmazonLinuxGeneration.AMAZON_LINUX_2
-            ),
-            key_name="yongho1037",
-            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE),
-            user_data=userdata,
-            security_group=sg,
-            spot_price="0.005",
-            min_capacity=1,
-            max_capacity=3,
-            desired_capacity=1,
-            role=role,
-        )
-
-        nlb.add_listener("locust", port=8089, protocol=lb.Protocol.TCP) \
-            .add_targets("locust", port=8089, targets=[asg])
-
-        return asg
+        nlb.add_listener(name, port=port, protocol=lb.Protocol.TCP) \
+            .add_targets(name, port=port, targets=[asg])
 
     @property
     def outputs(self):

@@ -52,5 +52,9 @@ db.cafe.ensureIndex({location:"2dsphere"})
     ```
 3. cdk 실행
     ```buildoutcfg
-    cdk deploy VpcCdkStack Ec2CdkStack SgCdkStack
+    cdk deploy VpcCdkStack WebCdkStack StressTestCdkStack SgCdkStack
+    ```
+4. cdk 제거
+    ```buildoutcfg
+    cdk destroy VpcCdkStack WebCdkStack StressTestCdkStack SgCdkStack
     ```
