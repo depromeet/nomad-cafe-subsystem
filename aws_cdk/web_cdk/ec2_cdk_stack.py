@@ -1,5 +1,6 @@
 from aws_cdk import (
     aws_ec2 as ec2,
+    aws_iam as iam,
     aws_elasticloadbalancingv2 as lb,
     aws_autoscaling as autoscaling,
     core
@@ -9,6 +10,13 @@ from aws_cdk import (
 class Ec2CdkStack(core.Stack):
     def __init__(self, scope: core.Construct, id: str, props, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
+
+        default_role = iam.Role(
+            self,
+            "DefaultRole",
+            assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
+        )
+        default_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))
 
         userdata = ec2.UserData.for_linux()
         with open("./web_cdk/userdata.sh", "rb") as f:
@@ -28,6 +36,11 @@ class Ec2CdkStack(core.Stack):
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE),
             user_data=userdata,
             security_group=props["sg"],
+            spot_price="0.005",
+            min_capacity=1,
+            max_capacity=3,
+            desired_capacity=1,
+            role=default_role,
         )
 
         nlb = lb.NetworkLoadBalancer(self, id="nlb_cdk",
@@ -35,8 +48,10 @@ class Ec2CdkStack(core.Stack):
                                      internet_facing=True,
                                      cross_zone_enabled=True,
                                      vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC))
-        listener = nlb.add_listener("web_listener", port=80, protocol=lb.Protocol.TCP)
-        listener.add_targets("web_target", port=80, targets=[asg])
+        nlb.add_listener("web", port=80, protocol=lb.Protocol.TCP) \
+            .add_targets("web", port=80, targets=[asg])
+        nlb.add_listener("locust", port=8089, protocol=lb.Protocol.TCP) \
+            .add_targets("locust", port=8089, targets=[asg])
 
         self.output_props = props.copy()
         self.output_props['asg'] = asg

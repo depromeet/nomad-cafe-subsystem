@@ -27,6 +27,10 @@ class SgCdkStack(core.Stack):
             connection=ec2.Port.tcp(80)
         )
         sg.add_ingress_rule(
+            peer=ec2.Peer.ipv4(my_ip),
+            connection=ec2.Port.tcp(8089)
+        )
+        sg.add_ingress_rule(
             peer=ec2.Peer.ipv4("10.0.0.0/16"),
             connection=ec2.Port.tcp(80)
         )
