@@ -1,7 +1,9 @@
-from locust import HttpUser, TaskSet, task
+from locust import HttpUser, between, task
 
 
-class UserBehavior(TaskSet):
+class WebsiteUser(HttpUser):
+    ait_time = between(5, 9)
+
     def on_start(self):
         self.login()
 
@@ -15,9 +17,3 @@ class UserBehavior(TaskSet):
     @task(1)
     def profile(self):
         self.client.get("/profile")
-
-
-class WebsiteUser(HttpUser):
-    task_set = UserBehavior
-    min_wait = 5000
-    max_wait = 9000
