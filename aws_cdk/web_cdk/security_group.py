@@ -27,6 +27,10 @@ class SgCdkStack(core.Stack):
             connection=ec2.Port.tcp(80)
         )
         sg.add_ingress_rule(
+            peer=ec2.Peer.ipv4(my_ip),
+            connection=ec2.Port.tcp(8089)
+        )
+        sg.add_ingress_rule(
             peer=ec2.Peer.ipv4("10.0.0.0/16"),
             connection=ec2.Port.tcp(80)
         )
@@ -34,7 +38,6 @@ class SgCdkStack(core.Stack):
         self.output_props = props.copy()
         self.output_props['sg'] = sg
 
-    # property를 사용하면 변수 사용하듯이 메소드를 사용할 수 있음
     @property
     def outputs(self):
         return self.output_props

@@ -1,7 +1,7 @@
 #!/bin/sh
 # 테스트를 위한 샘플 코드
 
-#install httpd
+yum update -y
 yum install httpd -y
 
 #enable and start httpd
