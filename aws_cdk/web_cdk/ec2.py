@@ -25,6 +25,8 @@ class Ec2CdkStack(core.Stack):
             )
             default_role.add_managed_policy(
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))
+            default_role.add_managed_policy(
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2ContainerRegistryReadOnly"))
             self.output_props["default_role"] = default_role
 
     def create_nlb(self, props):
@@ -36,6 +38,7 @@ class Ec2CdkStack(core.Stack):
                                          vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC))
 
             self.output_props["nlb"] = nlb
+            self.output_props["nlb_dns_name"] = nlb.load_balancer_dns_name
 
     def create_asg(self, service_type):
         if service_type == "web":
