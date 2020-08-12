@@ -3,11 +3,11 @@
 
 ### 전체 아키텍처
 
-![Architecture](images/architecture.png)
+![Architecture](images/architecture_v2.png)
 
 ### 사용자 Flow
 
-- 사용자는 모바일 Nomad Cafe 사이트에 접속하여 기능을 실행하면 각 요청이 Network LoadBalancer를 거쳐 Nomad Cafe 웹 서버로 API 요청이 전달된다. 이 때 Nomad Cafe 웹서버는 오토스케일링 그룹에 등록되어 트래픽이 증가하거나 감소할 경우 스케일 인/아웃을 수행한다.
+- 사용자는 모바일 Nomad Cafe 사이트에 접속하여 기능을 실행하면 각 요청이 Network LoadBalancer를 거쳐 Nomad Cafe 웹 서버로 API 요청이 전달된다. 이 때 Nomad Cafe 웹서버는 ECS Fargate를 사용하여 실행되기 때문에 트래픽 증가에 따라 컨테이너 수가 스케일 인/아웃 된다. 
 - 사용자가 웹 사이트를 이용하면서 발생하는 데이터들은 모두 MongoDB에 저장되며 MongoDB는 관리형 서비스인 Atlas를 사용한다. 
   ![](images/mongo.png)
 
@@ -16,19 +16,15 @@
 
 ### CI/CD Flow
 
-- 배포 자동화를 위해서는 외부에서 대상 EC2 인스턴스로 SSH 접속이 가능해야 하지만 웹 서버가 실행되고 있는 EC2 인스턴스는 외부 접근이 불가능한 Private 서브넷에 생성되어있다. 
-- Github Action으로 배포 할 경우 Github Action 스크립트가 실행되는 Github 쪽 서버의 ACL이 허용되어 있어야 하지만 Github Action이 실행되는 서버는 불특정 다수의 Ip를 사용하기 때문에 광범위한 ACL 허용이 필요하다.
-- 이와 같은 이유로 ECR로 이미지만 push되면 해당 이벤트에 의해 Github과는 별개로 배포가 진행되도록 구성한다. AWS EventBridge를 사용하면 ECR로 이미지가 Push된 이벤트를 감지하여 Lambda 함수를 실행할 수 있다. 
-- Lambda 함수가 실행되더라도 EC2 인스턴스의 Docker 이미지를 갱신하기 위해서는 결국 해당 인스턴스에 SSH로 접근하여 명령을 실행해야 한다. SSH 설정의 번거로움을 줄이기 위해 AWS System Manager의 RunCommand 기능을 사용하여 대상 EC2 인스턴스에 Shell Script를 실행한다.
-- 결과적으로 외부에서 발생한 이벤트로 별도의 ACL 허용 없이 Private Subnet에 위치한 EC2 인스턴스의 Docker 이미지 교체가 가능하다. 
-- 요약하면 다음과 같다.
+- 웹 서버는 Amazon ECS Fargate를 사용하고 있기 떄문에 Docker 이미지가 ECR로 푸시되면 ECS의 Task Definition 수정으로 이미지 버전을 갱신하고, Service Update를 수행함으로써 안전하게 배포 된다.   
+- Github Action에서 실행되는 절차는 다음과 같다.
     1. Github Repository에 코드 Push
     2. Github Action을 사용하여 Docker 이미지 빌드
     3. Amazon ECR로 Docker 이미지 Push
-    4. 이미지가 Push 되면 EventBridge에서 감지
-    5. EventBridge에서 Lambda 함수 실행
-    6. Lambda 함수에서 System Manager Runcommand 실행
-    7. 배포 대상 EC2 인스턴스에서 미리 작성해둔 스크립트가 실행되어 Docker 이미지 갱신
+    4. 최신 Task Definition의 json 파일 다운로드
+    5. Task Definition에 Docker 이미지 버전 갱신
+    6. 갱신된 Task Definition을 기반으로 Service 업데이트
+    7. master 브랜치인 경우 릴리즈 생성
 
 ### 부하테스트 Flow
 
