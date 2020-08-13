@@ -8,7 +8,7 @@ class HTTPUtil:
     def get(url, params=None, **kwargs):
         resp = requests.get(url=url, params=params, **kwargs)
         resp_json = json.loads(resp.text)
-        print(json.dumps(resp_json, indent=4, sort_keys=True, ensure_ascii=False))
+        # print(json.dumps(resp_json, indent=4, sort_keys=True, ensure_ascii=False))
         return resp_json
 
     @staticmethod
