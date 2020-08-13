@@ -41,7 +41,7 @@ def lambda_handler(event, context):
                 "commands": [
                     "aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS "
                     "--password-stdin 992189553983.dkr.ecr.ap-northeast-2.amazonaws.com",
-                    "cd /home/ssm-user",
+                    "cd /home/ssm-user/nomad-cafe-server",
                     "docker-compose pull",
                     "docker-compose stop web",
                     "docker-compose rm web",
