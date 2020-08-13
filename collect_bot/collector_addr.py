@@ -4,6 +4,7 @@ import time
 
 import collector
 import http_util
+import addr_data_loader
 
 
 class CollectorAddr(collector.Collector):
@@ -16,33 +17,42 @@ class CollectorAddr(collector.Collector):
         self.addr_key = self.config_map["bot"]["addr_key"]
 
     def collect(self):
-        dong = "천호동"
-        total_count = self._get_total_count(dong)
-        start_page = 1
+        towns = addr_data_loader.load_seoul_towns()
+        for town in towns:
+            if town == "천호동":
+                continue
+
+            self.collect_by_town(town)
+
+    def collect_by_town(self, town):
+        result = []
+        total_count = self._get_total_count(town)
+        curr_page = 1
         row_count = 100
         loop_count = total_count / row_count + 1
-        result = []
         total_start = time.time()
-        while start_page <= loop_count:
+        while curr_page <= loop_count:
             start = time.time()
-            resp = self._get(start_page, row_count, dong)
+            resp = self._get(curr_page, row_count, town)
             if resp["results"]["common"]["errorCode"] != "0":
                 break
 
-            start_page += 1
             objs = self._parse(resp)
             result.extend(objs)
             result = list(set(result))
             end = time.time()
-            print(f"page {start_page} collected ({int(end - start)}s). count : {len(objs)}")
+            print(f"page {curr_page} collected ({int(end - start)}s). count : {len(objs)}")
+            curr_page += 1
 
         end = time.time()
-        print(f"collected {dong}({int(end - total_start)}s). count : {len(result)}"
+        print(f"collected {town}({int(end - total_start)}s). count : {len(result)}"
               f", total count : {self.collect_count}")
+        self.append_to_file({town: result})
 
-        f = open("juso.txt", 'a', encoding="utf-8")
-        f.write(json.dumps({dong: result}, ensure_ascii=False) + ",")
-        f.close()
+    @staticmethod
+    def append_to_file(data):
+        with open("juso.txt", 'a', encoding="utf-8") as f:
+            f.write(json.dumps(data, ensure_ascii=False) + ",")
 
     def _get_total_count(self, keyword):
         resp = self._get(start=1, count=2, keyword=keyword)
