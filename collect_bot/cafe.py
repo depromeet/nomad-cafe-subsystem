@@ -14,6 +14,10 @@ class Cafe:
     parcel_addr: str = ""
     road_addr: str = ""
     phone: str = ""
+    zipcode: str = ""
+    homepage: str = ""
+    brand_name: str = ""
+    img: str = ""
     tags: dict = field(default_factory=dict)
     location: dict = field(default_factory=dict)
     create_dt: datetime.date = datetime.datetime.utcnow()

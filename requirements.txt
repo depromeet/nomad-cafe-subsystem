@@ -1,4 +1,5 @@
-locust
+beautifulsoup4
+locust~=1.1.1
 publicip
 attrs==19.3.0
 aws-cdk.aws-cloudwatch==1.56.0
@@ -29,3 +30,18 @@ requests==2.24.0
 six==1.15.0
 typing-extensions==3.7.4.2
 urllib3==1.25.10
+
+,
+"Host": "search.map.daum.net",
+"Connection": "keep-alive",
+"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36",
+"Accept": "*/*",
+"Sec-Fetch-Site": "cross-site",
+"Sec-Fetch-Mode": "no-cors",
+"Sec-Fetch-Dest": "script",
+"Referer": "https://map.kakao.com/?from=total&nil_suggest=btn&q=%EC%97%AD%EC%82%BC%20%EC%B9%B4%ED%8E%98&tab=place",
+"Accept-Encoding": "gzip, deflate, br",
+"Accept-Language": "ko,en;q=0.9,en-US;q=0.8,ja;q=0.7",
+"Cookie": "webid=42b7cf70f7d411e8a5ac000af759d440; webid_ts=1582974559463; webid_sync=1597317868174",
+setuptools~=49.2.0
+configparser~=5.0.0
