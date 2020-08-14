@@ -20,19 +20,20 @@ class CollectorFile(collector.Collector):
 
         for file_name in file_list:
             self.upsert_db(f"{base_dir}/{file_name}")
+            self.progress_bar.update(1)
 
     def upsert_db(self, file_path):
         with open(file_path, encoding="utf-8") as json_file:
             try:
-                objs = json.load(json_file)
+                json_text = f"[{json_file.read()[:-1]}]"
+                objs = json.loads(json_text)
                 if not objs:
                     return
 
                 self.db.upsert_many(objs)
                 count = len(objs)
                 self.total_count += count
-                self.progress_bar.update(count)
-                print(f"{file_path} collected {count}, total : {self.total_count}")
+                # print(f"{file_path} collected {count}, total : {self.total_count}")
             except Exception as e:
                 print(e)
 

@@ -45,24 +45,29 @@ class CollectorForDaum(collector.Collector):
         self.progress_bar = {}
         self.progress_count = 0
         self.progress_lock = threading.Lock()
+        self.completes = []
 
     def collect(self):
         villiges = self.addr_loader.load_villiges_from_addr_api()
         towns = self.addr_loader.load_towns_from_addr_api()
 
         self.progress_bar = tqdm.tqdm(total=len(towns), desc="카페 정보 수집 중")
+        try:
+            thread_count = 50
+            thread_list = []
+            with ThreadPoolExecutor(max_workers=thread_count) as executor:
+                for town in towns:
+                    thread_list.append(executor.submit(self.search, {
+                        "town": town,
+                        "villiges": villiges[town]
+                    }))
 
-        thread_count = 50
-        thread_list = []
-        with ThreadPoolExecutor(max_workers=thread_count) as executor:
-            for town in towns:
-                thread_list.append(executor.submit(self.search, {
-                    "town": town,
-                    "villiges": villiges[town]
-                }))
-
-            for execution in concurrent.futures.as_completed(thread_list):
-                execution.result()
+                for execution in concurrent.futures.as_completed(thread_list):
+                    execution.result()
+        except Exception as e:
+            print(e)
+        finally:
+            print(f"complete. {self.completes}")
 
     def search(self, data):
         town = data["town"]
@@ -86,6 +91,7 @@ class CollectorForDaum(collector.Collector):
             self._append_to_file(town, cafes)
             # print(f"collected {villige}")
 
+        self.completes.append(town)
         self._update_progress()
 
     def _request_cafe_data(self, query, page):
