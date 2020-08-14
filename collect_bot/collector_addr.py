@@ -7,6 +7,8 @@ import collector
 import http_util
 import addr_data_loader
 import tqdm
+import util
+import runner
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
@@ -17,52 +19,19 @@ class CollectorAddr(collector.Collector):
         if "addr_key" not in self.config_map["bot"]:
             raise Exception("invalid config (not exit addr key)")
 
+        self.addr_loader = addr_data_loader.AddrDataLoader()
+        self.runner = runner.Runner()
         self.addr_url = self.config_map["bot"]["addr_url"]
         self.addr_key = self.config_map["bot"]["addr_key"]
 
+    # 데이터 수집 시작
     def collect(self):
-        towns = addr_data_loader.load_seoul_towns()
-        already_exist_towns = addr_data_loader.load_alread_exists()
-
-        target_towns = []
-        for town in towns:
-            if town in already_exist_towns:
-                continue
-
-            target_towns.append(town)
-
-        split_towns = []
-        thread_count = 8
-        for i in range(8):
-            split_towns.append([])
-
-        count_per_arr = len(target_towns) / thread_count
-
-        idx = 0
-        count = 0
-        for target_town in target_towns:
-            split_towns[idx].append(target_town)
-            if count > count_per_arr:
-                idx += 1
-                count = 0
-                continue
-
-            count += 1
-
+        towns = self.addr_loader.load_seoul_towns_from_xlsx()
+        already_exist_towns = self.addr_loader.load_towns_from_addr_api()
+        target_towns = util.excloud_exist_data_for_array(towns, already_exist_towns)
         print(f"total towns : {len(towns)}, after remove exist count : {len(target_towns)}\n")
-        print(f"count per arr : {int(count_per_arr)}, split : {len(split_towns)}")
-        for split_town in split_towns:
-            print(f"split count : {len(split_town)}, data : {split_town}")
 
-        thread_list = []
-        with ThreadPoolExecutor(max_workers=thread_count) as executor:
-            for split_town in split_towns:
-                thread_list.append(executor.submit(self.collect_by_towns, split_town))
-
-            for execution in concurrent.futures.as_completed(thread_list):
-                execution.result()
-
-        # self.collect_by_towns(already_exist_towns, towns)
+        self.runner.run(self.collect_by_towns, target_towns)
 
     def collect_by_towns(self, towns):
         print(f"다음 동들의 도로명 수집 : {towns}")
@@ -89,13 +58,15 @@ class CollectorAddr(collector.Collector):
             result = list(set(result))
             curr_page += 1
             progress_bar.update(row_count)
+            break
 
         progress_bar.close()
         end = time.time()
         print(f"collected {town}({int(end - total_start)}s). count : {len(result)}"
               f", total count : {self.collect_count}")
-        self.append_to_file({town: result})
+        # self.append_to_file({town: result})
 
+    # 수집한 데이터는 json 파일로 저장
     @staticmethod
     def append_to_file(data):
         with open("juso.json", 'a', encoding="utf-8") as f:

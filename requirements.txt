@@ -1,5 +1,5 @@
 beautifulsoup4
-locust
+locust~=1.1.1
 publicip
 attrs==19.3.0
 aws-cdk.aws-cloudwatch==1.56.0
@@ -43,3 +43,5 @@ urllib3==1.25.10
 "Accept-Encoding": "gzip, deflate, br",
 "Accept-Language": "ko,en;q=0.9,en-US;q=0.8,ja;q=0.7",
 "Cookie": "webid=42b7cf70f7d411e8a5ac000af759d440; webid_ts=1582974559463; webid_sync=1597317868174",
+setuptools~=49.2.0
+configparser~=5.0.0

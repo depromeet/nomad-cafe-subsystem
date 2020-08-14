@@ -32,7 +32,7 @@ class CollectorForDaum(collector.Collector):
         }
 
     def collect(self):
-        towns = addr_data_loader.load_seoul_towns()
+        towns = addr_data_loader.load_seoul_towns_from_xlsx()
         total_start = time.time()
         for town in towns:
             start = time.time()
