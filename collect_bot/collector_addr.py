@@ -64,7 +64,7 @@ class CollectorAddr(collector.Collector):
         end = time.time()
         print(f"collected {town}({int(end - total_start)}s). count : {len(result)}"
               f", total count : {self.collect_count}")
-        # self.append_to_file({town: result})
+        self.append_to_file({town: result})
 
     # 수집한 데이터는 json 파일로 저장
     @staticmethod

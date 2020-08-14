@@ -2,10 +2,19 @@ import json
 import time
 from dataclasses import field, dataclass
 
+import configparser
 import addr_data_loader
 import requests
 import cafe
 import collector
+import util
+import runner
+import threading
+import datetime
+import tqdm
+import os
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 
 
 @dataclass
@@ -30,34 +39,58 @@ class CollectorForDaum(collector.Collector):
             "Accept-Language": "ko,en;q=0.9,en-US;q=0.8,ja;q=0.7"
 
         }
+        self.addr_loader = addr_data_loader.AddrDataLoader()
+        self.runner = runner.Runner()
+        self.locks = {}
+        self.progress_bar = {}
+        self.progress_count = 0
+        self.progress_lock = threading.Lock()
 
     def collect(self):
-        towns = addr_data_loader.load_seoul_towns_from_xlsx()
-        total_start = time.time()
-        for town in towns:
-            start = time.time()
-            before_count = self.collect_count
-            self._search(f"서울 {town} 카페")
-            end = time.time()
-            print(f"collected {town}({int(end - start)}s). count : {self.collect_count - before_count}"
-                  f", total count : {self.collect_count}")
+        villiges = self.addr_loader.load_villiges_from_addr_api()
+        towns = self.addr_loader.load_towns_from_addr_api()
 
-        end = time.time()
-        print(f"finished ({int(end - total_start)}s)")
+        self.progress_bar = tqdm.tqdm(total=len(towns), desc="카페 정보 수집 중")
 
-    def _search(self, query):
-        page = 1
-        while True:
-            objs = self._request_cafe_data(query, page)
-            if not objs:
-                break
+        thread_count = len(towns)
+        thread_list = []
+        with ThreadPoolExecutor(max_workers=thread_count) as executor:
+            for town in towns:
+                thread_list.append(executor.submit(self.search, {
+                    "town": town,
+                    "villiges": villiges[town]
+                }))
 
-            self.upsert_many(objs)
-            page += 1
+            for execution in concurrent.futures.as_completed(thread_list):
+                execution.result()
+
+    def search(self, data):
+        town = data["town"]
+        villiges = data["villiges"]
+        for villige in villiges:
+            cafes = []
+            page = 1
+            while True:
+                objs = self._request_cafe_data(f"{villige} 카페", page)
+                if not objs:  # 한 페이지 당 최대 카페수는 15
+                    break
+
+                cafes.extend(objs)
+
+                if len(objs) < 15:  # 한 페이지 당 최대 카페수는 15
+                    break
+
+                page += 1
+
+            # self.upsert_many(cafes)
+            self._append_to_file(town, cafes)
+            # print(f"collected {villige}")
+
+        self._update_progress()
 
     def _request_cafe_data(self, query, page):
         url = f"https://search.map.daum.net/mapsearch/map.daum?" \
-            f"q={query}&msFlag=A&page={page}&sort=0 "
+              f"q={query}&msFlag=A&page={page}&sort=0 "
 
         cafes = []
         resp = requests.get(url, headers=self.headers)
@@ -74,3 +107,29 @@ class CollectorForDaum(collector.Collector):
             cafes.append(obj.__dict__)
 
         return cafes
+
+    # 수집한 데이터는 json 파일로 저장
+    def _append_to_file(self, town, datas):
+        if town not in self.locks:
+            self.locks[town] = threading.Lock()
+
+        lock = self.locks[town]
+        lock.acquire()
+        with open(f"data/{town}.json", 'a', encoding="utf-8") as f:
+            if datas:
+                f.write(json.dumps(datas, ensure_ascii=False, default=self.json_default))
+            else:
+                f.write("없음")
+
+        lock.release()
+
+    @staticmethod
+    def json_default(value):
+        if isinstance(value, datetime.date):
+            return value.strftime('%c')
+        raise TypeError('not JSON serializable')
+
+    def _update_progress(self):
+        self.progress_lock.acquire()
+        self.progress_bar.update(1)
+        self.progress_lock.release()
