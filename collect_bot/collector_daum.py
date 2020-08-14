@@ -52,7 +52,7 @@ class CollectorForDaum(collector.Collector):
 
         self.progress_bar = tqdm.tqdm(total=len(towns), desc="카페 정보 수집 중")
 
-        thread_count = len(towns)
+        thread_count = 50
         thread_list = []
         with ThreadPoolExecutor(max_workers=thread_count) as executor:
             for town in towns:
@@ -117,9 +117,8 @@ class CollectorForDaum(collector.Collector):
         lock.acquire()
         with open(f"data/{town}.json", 'a', encoding="utf-8") as f:
             if datas:
-                f.write(json.dumps(datas, ensure_ascii=False, default=self.json_default))
-            else:
-                f.write("없음")
+                for data in datas:
+                    f.write(json.dumps(data, ensure_ascii=False, default=self.json_default) + ",")
 
         lock.release()
 
