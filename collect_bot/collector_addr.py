@@ -1,3 +1,4 @@
+import concurrent
 import configparser
 import json
 import time
@@ -6,6 +7,8 @@ import collector
 import http_util
 import addr_data_loader
 import tqdm
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 
 
 class CollectorAddr(collector.Collector):
@@ -20,12 +23,51 @@ class CollectorAddr(collector.Collector):
     def collect(self):
         towns = addr_data_loader.load_seoul_towns()
         already_exist_towns = addr_data_loader.load_alread_exists()
-        print(f"다음 동들의 도로명 수집 : {towns}")
+
+        target_towns = []
         for town in towns:
             if town in already_exist_towns:
                 continue
 
-            print(f"{town} 도로명 수집 시작")
+            target_towns.append(town)
+
+        split_towns = []
+        thread_count = 8
+        for i in range(8):
+            split_towns.append([])
+
+        count_per_arr = len(target_towns) / thread_count
+
+        idx = 0
+        count = 0
+        for target_town in target_towns:
+            split_towns[idx].append(target_town)
+            if count > count_per_arr:
+                idx += 1
+                count = 0
+                continue
+
+            count += 1
+
+        print(f"total towns : {len(towns)}, after remove exist count : {len(target_towns)}\n")
+        print(f"count per arr : {int(count_per_arr)}, split : {len(split_towns)}")
+        for split_town in split_towns:
+            print(f"split count : {len(split_town)}, data : {split_town}")
+
+        thread_list = []
+        with ThreadPoolExecutor(max_workers=thread_count) as executor:
+            for split_town in split_towns:
+                thread_list.append(executor.submit(self.collect_by_towns, split_town))
+
+            for execution in concurrent.futures.as_completed(thread_list):
+                execution.result()
+
+        # self.collect_by_towns(already_exist_towns, towns)
+
+    def collect_by_towns(self, towns):
+        print(f"다음 동들의 도로명 수집 : {towns}")
+        for town in towns:
+            print(f"{town} 도로명 수집 시작\n")
             self.collect_by_town(town)
 
     def collect_by_town(self, town):
@@ -56,7 +98,7 @@ class CollectorAddr(collector.Collector):
 
     @staticmethod
     def append_to_file(data):
-        with open("juso.txt", 'a', encoding="utf-8") as f:
+        with open("juso.json", 'a', encoding="utf-8") as f:
             f.write(json.dumps(data, ensure_ascii=False) + ",")
 
     def _get_total_count(self, keyword):

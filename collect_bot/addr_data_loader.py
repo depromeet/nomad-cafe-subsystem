@@ -57,7 +57,7 @@ def load_national_divisions():
 
 def load_alread_exists():
     result = []
-    with open('juso_2.txt') as json_file:
+    with open('juso_2.json') as json_file:
         objs = json.load(json_file)
         if not objs:
             raise Exception("not exist data")
