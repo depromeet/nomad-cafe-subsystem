@@ -53,3 +53,21 @@ def load_national_divisions():
             divisions.append(feature['properties']['name'])
 
     return divisions
+
+
+def load_alread_exists():
+    result = []
+    with open('juso_2.txt') as json_file:
+        objs = json.load(json_file)
+        if not objs:
+            raise Exception("not exist data")
+
+        for feature in objs:
+            for key in feature.keys():
+                result.append(key)
+
+    return result
+
+
+if __name__ == "__main__":
+    print(load_alread_exists())

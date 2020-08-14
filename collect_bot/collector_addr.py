@@ -5,6 +5,7 @@ import time
 import collector
 import http_util
 import addr_data_loader
+import tqdm
 
 
 class CollectorAddr(collector.Collector):
@@ -18,10 +19,13 @@ class CollectorAddr(collector.Collector):
 
     def collect(self):
         towns = addr_data_loader.load_seoul_towns()
+        already_exist_towns = addr_data_loader.load_alread_exists()
+        print(f"다음 동들의 도로명 수집 : {towns}")
         for town in towns:
-            if town == "천호동":
+            if town in already_exist_towns:
                 continue
 
+            print(f"{town} 도로명 수집 시작")
             self.collect_by_town(town)
 
     def collect_by_town(self, town):
@@ -31,8 +35,9 @@ class CollectorAddr(collector.Collector):
         row_count = 100
         loop_count = total_count / row_count + 1
         total_start = time.time()
+
+        progress_bar = tqdm.tqdm(total=total_count, desc=town)
         while curr_page <= loop_count:
-            start = time.time()
             resp = self._get(curr_page, row_count, town)
             if resp["results"]["common"]["errorCode"] != "0":
                 break
@@ -40,10 +45,10 @@ class CollectorAddr(collector.Collector):
             objs = self._parse(resp)
             result.extend(objs)
             result = list(set(result))
-            end = time.time()
-            print(f"page {curr_page} collected ({int(end - start)}s). count : {len(objs)}")
             curr_page += 1
+            progress_bar.update(row_count)
 
+        progress_bar.close()
         end = time.time()
         print(f"collected {town}({int(end - total_start)}s). count : {len(result)}"
               f", total count : {self.collect_count}")
