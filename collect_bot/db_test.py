@@ -61,6 +61,7 @@ class DBTest(unittest.TestCase):
             연화다방: 서울특별시 관악구 쑥고개로 55, 지하1층 (봉천동) (1149m)
         """
         for c in cur:
+            print(c)
             print(f'{c["name"]}: {c["road_addr"]} ({int(c["dist"]["calculated"])}m)')
 
     @staticmethod

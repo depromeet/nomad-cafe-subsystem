@@ -1,20 +1,16 @@
+import concurrent.futures
+import datetime
 import json
-import time
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import field, dataclass
 
-import configparser
 import addr_data_loader
-import requests
 import cafe
 import collector
-import util
+import requests
 import runner
-import threading
-import datetime
 import tqdm
-import os
-import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
 
 
 @dataclass
@@ -96,7 +92,7 @@ class CollectorForDaum(collector.Collector):
 
     def _request_cafe_data(self, query, page):
         url = f"https://search.map.daum.net/mapsearch/map.daum?" \
-              f"q={query}&msFlag=A&page={page}&sort=0 "
+            f"q={query}&msFlag=A&page={page}&sort=0 "
 
         cafes = []
         resp = requests.get(url, headers=self.headers)
