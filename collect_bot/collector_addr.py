@@ -1,19 +1,20 @@
-import concurrent
 import configparser
 import json
 import time
 
+import addr_data_loader
 import collector
 import http_util
-import addr_data_loader
+import runner
 import tqdm
 import util
-import runner
-import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
 
 
 class CollectorAddr(collector.Collector):
+    """
+    동 이름으로 하위 도로명 조회 후 파일로 저장
+    """
+
     def __init__(self, config_map):
         super().__init__(config_map)
         if "addr_key" not in self.config_map["bot"]:
@@ -64,7 +65,10 @@ class CollectorAddr(collector.Collector):
         end = time.time()
         print(f"collected {town}({int(end - total_start)}s). count : {len(result)}"
               f", total count : {self.collect_count}")
-        # self.append_to_file({town: result})
+        self.append_to_file({town: result})
+
+    def get_db(self):
+        return self.db.db
 
     # 수집한 데이터는 json 파일로 저장
     @staticmethod
@@ -112,4 +116,8 @@ if __name__ == "__main__":
     config_map = {}
     for key in config.keys():
         config_map[key] = dict(config.items(key))
-    CollectorAddr(config_map).collect()
+
+    addr = CollectorAddr(config_map)
+
+    # 모든 도로명 수집
+    addr.collect()

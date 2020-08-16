@@ -11,6 +11,10 @@ class Cafe:
     x: str
     y: str
     _id: str = ""
+    region_1depth_name: str = ""
+    region_2depth_name: str = ""
+    region_3depth_name: str = ""
+    road_name: str = ""
     parcel_addr: str = ""
     road_addr: str = ""
     phone: str = ""

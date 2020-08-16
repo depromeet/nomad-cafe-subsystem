@@ -19,6 +19,7 @@ import shapefile
 class AddrDataLoader:
     towns: list = field(default_factory=list)
     villiges: list = field(default_factory=list)
+    villiges_by_town: dict = field(default_factory=dict)
 
     # 출저 : https://financedata.github.io/posts/korea-area-code.html
     def load_seoul_towns_from_xlsx(self):
@@ -77,28 +78,29 @@ class AddrDataLoader:
 
     # 출저 : https://www.juso.go.kr/addrlink/devAddrLinkRequestGuide.do?menu=roadApi
     def load_villiges_from_addr_api(self):
+        result = {}
         with open('juso.json', encoding="utf-8") as json_file:
-            self.villiges = json.load(json_file)
-            if not self.villiges:
+            objs = json.load(json_file)
+            if not objs:
                 raise Exception("not exist data")
 
-            return self.villiges
+            for obj in objs:
+                for key in obj.keys():
+                    result[key] = obj[key]
+
+            self.villiges_by_town = result
+            return self.villiges_by_town
 
         raise Exception("json file load fail")
 
     # 출저 : https://www.juso.go.kr/addrlink/devAddrLinkRequestGuide.do?menu=roadApi
     def load_towns_from_addr_api(self):
-        if self.villiges:
-            villiges = self.villiges
+        if self.villiges_by_town:
+            villiges = self.villiges_by_town
         else:
             villiges = self.load_villiges_from_addr_api()
 
-        towns = []
-        for feature in villiges:
-            for key in feature.keys():
-                towns.append(key)
-
-        self.towns = towns
+        self.towns = list(villiges.keys())
         return self.towns
 
 
