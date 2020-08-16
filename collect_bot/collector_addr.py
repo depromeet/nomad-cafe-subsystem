@@ -1,8 +1,6 @@
-import concurrent
 import configparser
 import json
 import time
-from concurrent.futures.thread import ThreadPoolExecutor
 
 import addr_data_loader
 import collector
@@ -22,19 +20,10 @@ class CollectorAddr(collector.Collector):
         if "addr_key" not in self.config_map["bot"]:
             raise Exception("invalid config (not exit addr key)")
 
-        if "url" not in self.config_map["kakao"]:
-            raise Exception("invalid config (not exit url)")
-
-        if "key" not in self.config_map["kakao"]:
-            raise Exception("invalid config (not exit key)")
-
         self.addr_loader = addr_data_loader.AddrDataLoader()
         self.runner = runner.Runner()
         self.addr_url = self.config_map["bot"]["addr_url"]
         self.addr_key = self.config_map["bot"]["addr_key"]
-        self.progress_bar = {}
-        self.kakao_addr_api_url = self.config_map["kakao"]["url"]
-        self.kakao_addr_api_key = self.config_map["kakao"]["key"]
 
     # 데이터 수집 시작
     def collect(self):
@@ -77,91 +66,6 @@ class CollectorAddr(collector.Collector):
         print(f"collected {town}({int(end - total_start)}s). count : {len(result)}"
               f", total count : {self.collect_count}")
         self.append_to_file({town: result})
-
-    def convert_wcongnamul_to_wgs84(self):
-        """
-        daum의 좌표계로 사용되는 wcongnamul 좌표를 wgs84(lat, lon) 형식으로 변환
-        """
-        thread_datas = []
-        i = 1
-        print("데이터베이스에서 데이터 로드 중")
-        while True:
-            data = self.skiplimit(page_size=1000, page_num=i)
-            if not data:
-                break
-
-            thread_datas.append(data)
-            i += 1
-
-        print("데이터 로드 완료")
-
-        total_count = 0
-        for datas in thread_datas:
-            total_count += len(datas)
-
-        self.progress_bar = tqdm.tqdm(total=total_count, desc="좌표 변환 중")
-        try:
-            thread_count = 4
-            thread_list = []
-            with ThreadPoolExecutor(max_workers=thread_count) as executor:
-                for data in thread_datas:
-                    thread_list.append(executor.submit(self.convert, data))
-
-                for execution in concurrent.futures.as_completed(thread_list):
-                    execution.result()
-        except Exception as e:
-            print(e)
-
-    def convert(self, datas):
-        for data in datas:
-            try:
-                obj = self._get_addr_info(data["road_addr"])
-                if not obj:
-                    continue
-
-                data["location"]["coordinates"] = [float(obj["x"]), float(obj["y"])]
-
-                if "road_address" in obj:
-                    ra = obj["road_address"]
-                    data["region_1depth_name"] = ra["region_1depth_name"]
-                    data["region_2depth_name"] = ra["region_2depth_name"]
-                    data["region_3depth_name"] = ra["region_3depth_name"]
-                    data["road_name"] = ra["road_name"]
-
-                self.get_db().update_one({
-                    "_id": data["_id"]
-                }, {
-                    "$set": data
-                })
-                self.progress_bar.update(1)
-            except Exception as e:
-                print(f"fail. {data}, err : {e}")
-
-    def _get_addr_info(self, query):
-        headers = {
-            "Authorization": f"KakaoAK {self.kakao_addr_api_key}"
-        }
-
-        resp = http_util.HTTPUtil.get(f"{self.kakao_addr_api_url}?page=1&AddressSize=1&query='{query}'",
-                                      headers=headers)
-        if "documents" not in resp:
-            print(f"err : not exist data {query}")
-            return {}
-
-        if not resp["documents"]:
-            return {}
-
-        return resp["documents"][0]
-
-    def skiplimit(self, page_size, page_num):
-        # Calculate number of documents to skip
-        skips = page_size * (page_num - 1)
-
-        # Skip and limit
-        cursor = self.get_db().find().skip(skips).limit(page_size)
-
-        # Return documents
-        return [x for x in cursor]
 
     def get_db(self):
         return self.db.db
@@ -214,11 +118,6 @@ if __name__ == "__main__":
         config_map[key] = dict(config.items(key))
 
     addr = CollectorAddr(config_map)
+
     # 모든 도로명 수집
-    # CollectorAddr(config_map).collect()
-
-    # 몽고디비에서 페이징 처리해서 데이터 가져오기
-    r = addr.skiplimit(page_size=1000, page_num=10)
-
-    # 좌표 변환
-    addr.convert_wcongnamul_to_wgs84()
+    addr.collect()
