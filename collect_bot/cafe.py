@@ -11,6 +11,21 @@ class Cafe:
     x: str
     y: str
     _id: str = ""
+    brand: str = ""
+    brand_name: str = ""
+    openoff_status: str = ""
+    addinfo_appointment: str = ""
+    addinfo_delivery: str = ""
+    addinfo_fordisabled: str = ""
+    addinfo_nursery: str = ""
+    addinfo_package: str = ""
+    addinfo_parking: str = ""
+    addinfo_pet: str = ""
+    addinfo_smokingroom: str = ""
+    addinfo_wifi: str = ""
+    last_cate_id: str = ""
+    last_cate_name: str = ""
+    cate_names: list = field(default_factory=list)
     region_1depth_name: str = ""
     region_2depth_name: str = ""
     region_3depth_name: str = ""

@@ -97,18 +97,60 @@ class CollectorForDaum(collector.Collector):
         cafes = []
         resp = requests.get(url, headers=self.headers)
         query_result = json.loads(resp.text)
+        required_category = ["카페", "커피전문점"]
         for place in query_result["place"]:
-            obj = cafe.Cafe(place["confirmid"], self.data_type, place["name"], place["x"], place["y"])
-            obj.parcel_addr = place["address"]
-            obj.road_addr = place["new_address"]
-            obj.zipcode = place["new_zipcode"]
-            obj.homepage = place["homepage"]
-            obj.brand_name = place["brandName"]
-            obj.phone = place["tel"]
-            obj.img = place["img"]
+            confirmid = self.getStrSafety(place, "confirmid")
+            name = self.getStrSafety(place, "name")
+            x = self.getStrSafety(place, "x")
+            y = self.getStrSafety(place, "y")
+
+            obj = cafe.Cafe(confirmid, self.data_type, name, x, y)
+            depth = self.getStrSafety(place, "last_cate_depth")
+            if depth:
+                try:
+                    cate_depth = int(depth)
+                    for i in range(0, cate_depth):
+                        cate_name = self.getStrSafety(place, f"cate_name_depth{i+1}")
+                        obj.cate_names.append(cate_name)
+                except Exception as e:
+                    print(e)
+
+            is_valid = any(elem in obj.cate_names for elem in required_category)
+            if not is_valid:
+                continue
+
+            obj.parcel_addr = self.getStrSafety(place, "address")
+            obj.road_addr = self.getStrSafety(place, "new_address")
+            obj.zipcode = self.getStrSafety(place, "new_zipcode")
+            obj.homepage = self.getStrSafety(place, "homepage")
+            obj.brand_name = self.getStrSafety(place, "brandName")
+            obj.phone = self.getStrSafety(place, "tel")
+            obj.img = self.getStrSafety(place, "img")
+
+            obj.addinfo_appointment = self.getStrSafety(place, "addinfo_appointment")
+            obj.addinfo_wifi = self.getStrSafety(place, "addinfo_wifi")
+            obj.addinfo_delivery = self.getStrSafety(place, "addinfo_delivery")
+            obj.addinfo_pet = self.getStrSafety(place, "addinfo_pet")
+            obj.addinfo_nursery = self.getStrSafety(place, "addinfo_nursery")
+            obj.addinfo_fordisabled = self.getStrSafety(place, "addinfo_fordisabled")
+            obj.addinfo_package = self.getStrSafety(place, "addinfo_package")
+            obj.addinfo_parking = self.getStrSafety(place, "addinfo_parking")
+            obj.addinfo_smokingroom = self.getStrSafety(place, "addinfo_smokingroom")
+
+            obj.last_cate_id = self.getStrSafety(place, "last_cate_id")
+            obj.last_cate_name = self.getStrSafety(place, "last_cate_name")
+            obj.last_cate_name = self.getStrSafety(place, "test")
+
             cafes.append(obj.__dict__)
 
         return cafes
+    
+    @staticmethod
+    def getStrSafety(obj, key):
+        if key in obj:
+            return obj[key]
+        else:
+            return ""
 
     # 수집한 데이터는 json 파일로 저장
     def _append_to_file(self, town, datas):
