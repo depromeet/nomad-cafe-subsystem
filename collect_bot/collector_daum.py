@@ -69,9 +69,6 @@ class CollectorForDaum(collector.Collector):
     def search(self, data):
         town = data["town"]
         villiges = data["villiges"]
-        if town == "가양2동":
-            print(town)
-
         for villige in villiges:
             cafes = []
             page = 1
