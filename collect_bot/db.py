@@ -26,7 +26,7 @@ class Mongo:
         self.password = temp["password"]
 
         connect_string = f"{self.scheme}://{self.username}:{self.password}@{self.host}/{self.dbname}?retryWrites" \
-                         f"=true&w=majority"
+                         f"=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE"
         conn = pymongo.MongoClient(connect_string)
         database = conn.get_database(self.dbname)
         self.db = database.get_collection(self.collection)

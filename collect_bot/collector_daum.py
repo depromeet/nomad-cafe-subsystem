@@ -2,6 +2,7 @@ import concurrent.futures
 import datetime
 import json
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import field, dataclass
 
@@ -68,6 +69,9 @@ class CollectorForDaum(collector.Collector):
     def search(self, data):
         town = data["town"]
         villiges = data["villiges"]
+        if town == "가양2동":
+            print(town)
+
         for villige in villiges:
             cafes = []
             page = 1
@@ -82,9 +86,11 @@ class CollectorForDaum(collector.Collector):
                     break
 
                 page += 1
+                time.sleep(1)
 
-            # self.upsert_many(cafes)
-            self._append_to_file(town, cafes)
+            if cafes:
+                self.upsert_many(cafes)
+            # self._append_to_file(town, cafes)
             # print(f"collected {villige}")
 
         self.completes.append(town)
